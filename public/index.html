@@ -96,6 +96,11 @@
 
   /* 안내 화면 */
   .intro h1 { font-size: 22px; margin-bottom: 16px; word-break: keep-all; }
+  .purpose {
+    font-size: 15px; color: var(--ink-2); margin-bottom: 16px; word-break: keep-all;
+  }
+  .purpose p { margin-bottom: 10px; }
+  .purpose strong { color: var(--ink); }
   .notice {
     background: var(--page); border: 1px solid var(--line); border-radius: 12px;
     padding: 16px; font-size: 14.5px; color: var(--ink-2); margin-bottom: 8px;
@@ -194,6 +199,10 @@ function renderIntro() {
   stage.innerHTML =
     '<div class="card intro">' +
     '<h1>협력사 거래·소통 실태 설문</h1>' +
+    '<div class="purpose">' +
+    '<p>' + esc(DATA.company) + '는 협력사와 일하는 방식을 점검하고 있습니다. 요구사항이 명확하게 전달되고 있는지, 소통 창구가 제대로 작동하는지, 현장에서 무리하거나 불편한 일은 없었는지 — 저희가 안에서 보는 것과 협력사가 실제로 겪으시는 것이 다를 수 있어, 직접 여쭙습니다.</p>' +
+    '<p>이 설문은 <strong>잘잘못을 가리기 위한 것이 아니라, 저희가 무엇을 고쳐야 하는지 찾기 위한 것</strong>입니다. 결과는 통계로 정리하여, 무엇을 어떻게 바꾸는지 개선 조치와 함께 협력사에 공유하겠습니다.</p>' +
+    '</div>' +
     '<div class="notice"><strong>본 설문은 무기명입니다.</strong>' +
     '<ul>' +
     '<li>응답자나 회사를 특정할 수 있는 정보를 수집하지 않습니다. (이름·회사명·연락처·접속 기록 없음)</li>' +
