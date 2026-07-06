@@ -82,6 +82,30 @@
     border-radius: 8px; padding: 10px 12px; margin-top: 12px; word-break: keep-all;
   }
 
+  /* 자동 진단 */
+  .diag-note {
+    font-size: 13px; color: var(--muted); margin: -4px 0 12px; word-break: keep-all;
+  }
+  .signal {
+    font-size: 14px; border-radius: 10px; padding: 11px 13px; margin-bottom: 8px; word-break: keep-all;
+    background: var(--page); border: 1px solid var(--line); color: var(--ink-2);
+  }
+  .signal.warn { border-left: 3px solid #fab219; }
+  .signal.warn::before { content: "⚠ "; }
+  .diag-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .diag-name { font-size: 15.5px; font-weight: 700; }
+  .chip {
+    font-size: 12.5px; font-weight: 700; border-radius: 999px; padding: 3px 12px; color: #fff;
+  }
+  .chip.lv0 { background: #0ca30c; }
+  .chip.lv1 { background: #b97e00; }
+  .chip.lv2 { background: #d03b3b; }
+  .diag-why { font-size: 13.5px; color: var(--muted); margin-bottom: 8px; word-break: keep-all; }
+  .diag-ev { font-size: 13px; color: var(--ink-2); margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+  .diag-actions { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
+  .diag-actions .t { font-size: 13px; font-weight: 700; color: var(--ink-2); margin-bottom: 6px; }
+  .diag-actions li { font-size: 14px; margin: 5px 0 5px 18px; word-break: keep-all; }
+
   .text-item {
     background: var(--page); border: 1px solid var(--line); border-radius: 10px;
     padding: 12px 14px; font-size: 14.5px; margin: 8px 0; white-space: pre-wrap; word-break: keep-all;
@@ -129,6 +153,34 @@ function render(data) {
   let html = '<div class="toolbar">' +
     '<div class="total">총 응답 <b>' + data.total + '</b>건</div>' +
     '<button class="btn ghost" id="csv">CSV 내려받기</button></div>';
+
+  // ---- 자동 진단 ----
+  const d = data.diagnosis;
+  if (d) {
+    html += '<div class="part-h">자동 진단 — 문제 유형과 개선책</div>';
+    html += '<div class="diag-note">각 문항의 의도를 문제 유형에 매핑해 응답 분포로 자동 판정합니다. ' +
+      '기준: 빈도 문항은 발생률 20%↑ 주의 / 발생률 50%↑ 또는 "여러 번" 30%↑ 심각, ' +
+      '척도 문항은 부정률 20%↑ 주의 / 40%↑ 심각. 판정 기준과 개선책은 diagnosis.js에서 수정합니다.</div>';
+
+    for (const s of d.signals) {
+      html += '<div class="signal' + (s.kind === 'warn' ? ' warn' : '') + '">' + esc(s.text) + '</div>';
+    }
+
+    for (const t of d.types) {
+      html += '<div class="card">';
+      html += '<div class="diag-head"><span class="chip lv' + t.level + '">' +
+        (t.level === 2 ? '심각' : t.level === 1 ? '주의' : '양호') + '</span>' +
+        '<span class="diag-name">' + esc(t.name) + '</span></div>';
+      html += '<div class="diag-why">' + esc(t.why) + '</div>';
+      if (t.evidence.length) html += '<div class="diag-ev">' + t.evidence.map(esc).join(' · ') + '</div>';
+      if (t.actions.length) {
+        html += '<div class="diag-actions"><div class="t">준비된 개선책</div><ul>' +
+          t.actions.map(a => '<li>' + esc(a) + '</li>').join('') + '</ul></div>';
+      }
+      html += '</div>';
+    }
+    html += '<div class="part-h">문항별 상세</div>';
+  }
 
   const partNames = { A: 'A. 최근 6개월간의 경험 (행동 빈도)', B: 'B. 소통 구조 (5점 척도)', C: 'C. 종합', R: '응답자 구분' };
   let curPart = '';

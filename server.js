@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { QUESTIONS, PART_INFO, CHOICES } = require('./questions');
+const { computeDiagnosis } = require('./diagnosis');
 
 const PORT = process.env.PORT || 3000;
 const COMPANY = process.env.COMPANY_NAME || 'CAMS';
@@ -103,7 +104,7 @@ app.get('/api/admin/results', (req, res) => {
     }
     return { id: q.id, part: q.part, type: q.type, text: q.text, choices: CHOICES[q.type], counts };
   });
-  res.json({ company: COMPANY, total: rows.length, stats });
+  res.json({ company: COMPANY, total: rows.length, stats, diagnosis: computeDiagnosis(rows, QUESTIONS) });
 });
 
 app.get('/api/admin/csv', (req, res) => {
