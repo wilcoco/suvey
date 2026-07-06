@@ -9,6 +9,8 @@ const COMPARE_CHOICES = [
   '가장 어려운 편',
   '비교 대상 없음',
 ];
+// 익명성 보호를 위해 구분은 굵게 2개까지만 둔다 (세분화할수록 응답자 특정 위험 증가).
+const ROLE_CHOICES = ['경영·관리자', '현장·실무자', '밝히고 싶지 않음'];
 
 const QUESTIONS = [
   // A. 행동 빈도 (최근 6개월)
@@ -32,14 +34,18 @@ const QUESTIONS = [
   { id: 'c1', part: 'C', type: 'compare', text: '거래하는 고객사가 여러 곳이라면, 소통과 업무 방식 면에서 {COMPANY}는 어느 수준입니까?' },
   { id: 'c2', part: 'C', type: 'text', text: '{COMPANY}와의 거래에서 다른 협력사들이 공통적으로 느낄 만한 어려움이 있다면 무엇이라고 생각하십니까?' },
   { id: 'c3', part: 'C', type: 'text', text: '{COMPANY} 대표이사가 이것 하나는 꼭 알아야 한다고 생각하는 것이 있다면 적어주십시오.' },
+
+  // R. 응답자 구분 (선택) — 맨 마지막에 두어 응답 위축을 막는다
+  { id: 'r1', part: 'R', type: 'role', text: '귀하의 위치는 다음 중 어디에 가깝습니까?' },
 ];
 
 const PART_INFO = {
   A: { title: '최근 6개월간의 경험', desc: '아래와 같은 일을 경험한 적이 있습니까?' },
   B: { title: '소통 구조', desc: '평소 느끼시는 정도를 선택해 주십시오.' },
   C: { title: '종합', desc: '' },
+  R: { title: '응답자 구분 (선택)', desc: '통계 구분용입니다. 회사명이나 이름과 연결되지 않으며, 밝히고 싶지 않으시면 마지막 항목을 선택하십시오.' },
 };
 
-const CHOICES = { freq: FREQ_CHOICES, likert: LIKERT_CHOICES, compare: COMPARE_CHOICES };
+const CHOICES = { freq: FREQ_CHOICES, likert: LIKERT_CHOICES, compare: COMPARE_CHOICES, role: ROLE_CHOICES };
 
 module.exports = { QUESTIONS, PART_INFO, CHOICES };

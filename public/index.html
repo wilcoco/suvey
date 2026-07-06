@@ -156,11 +156,11 @@ function render() {
 
   const q = qs[idx];
   const part = DATA.partInfo[q.part];
-  const partLabel = q.part === 'A' ? 'A. ' + part.title : q.part === 'B' ? 'B. ' + part.title : 'C. ' + part.title;
+  const partLabel = (q.part === 'R' ? '' : q.part + '. ') + part.title;
 
   let html = '<div class="card">';
   html += '<span class="part-tag">' + partLabel + '</span>';
-  if (part.desc && q.part !== 'C') html += '<div class="part-desc">' + part.desc + '</div>';
+  if (part.desc) html += '<div class="part-desc">' + part.desc + '</div>';
   html += '<div class="q-text">' + esc(q.text) + '</div>';
 
   if (q.type === 'text') {

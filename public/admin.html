@@ -130,7 +130,7 @@ function render(data) {
     '<div class="total">총 응답 <b>' + data.total + '</b>건</div>' +
     '<button class="btn ghost" id="csv">CSV 내려받기</button></div>';
 
-  const partNames = { A: 'A. 최근 6개월간의 경험 (행동 빈도)', B: 'B. 소통 구조 (5점 척도)', C: 'C. 종합' };
+  const partNames = { A: 'A. 최근 6개월간의 경험 (행동 빈도)', B: 'B. 소통 구조 (5점 척도)', C: 'C. 종합', R: '응답자 구분' };
   let curPart = '';
 
   for (const q of data.stats) {
@@ -156,6 +156,9 @@ function render(data) {
       });
       if (q.id === 'a10') {
         html += '<div class="flag">해석 기준: 다른 문항이 대부분 "없었다"인데 이 문항만 "있었다"가 나오면, 응답 전체의 솔직도가 낮다는 신호입니다. 결과 해석 시 이 문항부터 확인하십시오.</div>';
+      }
+      if (q.id === 'r1') {
+        html += '<div class="flag">주의: 경영·관리자와 현장·실무자의 응답 격차는 CSV로 교차 분석하되, 대표 열람까지만 사용하십시오. 사내 공유 자료에 구분별 수치를 넣으면 모수가 작아 응답자가 특정될 수 있습니다.</div>';
       }
     }
     html += '</div>';
