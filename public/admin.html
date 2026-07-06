@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>설문 결과 (관리자)</title>
+<style>
+  :root {
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --line: #e1e0d9;
+    --accent: #2a78d6;
+    --accent-soft: #cde2fb;
+    --warn: #d03b3b;
+    --border: rgba(11,11,11,0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --line: #2c2c2a;
+      --accent: #3987e5;
+      --accent-soft: #10315c;
+      --warn: #e66767;
+      --border: rgba(255,255,255,0.10);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: var(--page); color: var(--ink); line-height: 1.55;
+    display: flex; flex-direction: column; align-items: center; min-height: 100dvh;
+  }
+  .wrap { width: 100%; max-width: 760px; padding: 24px 18px 60px; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .sub { color: var(--muted); font-size: 13.5px; margin-bottom: 20px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px; margin-bottom: 14px;
+  }
+  .login input {
+    width: 100%; font: inherit; font-size: 16px; padding: 13px 14px; color: var(--ink);
+    background: var(--page); border: 1.5px solid var(--line); border-radius: 10px; margin-bottom: 12px;
+  }
+  .btn {
+    background: var(--accent); color: #fff; border: none; border-radius: 10px;
+    padding: 12px 20px; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1.5px solid var(--accent); }
+  .err { color: var(--warn); font-size: 14px; margin-top: 10px; }
+
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .total { font-size: 15px; }
+  .total b { font-size: 22px; }
+
+  .part-h { font-size: 15px; font-weight: 700; color: var(--ink-2); margin: 26px 0 10px; }
+  .q-title { font-size: 15px; font-weight: 650; margin-bottom: 14px; word-break: keep-all; }
+  .q-id { color: var(--muted); font-weight: 600; margin-right: 6px; }
+
+  /* 분포 가로 막대 */
+  .row { display: grid; grid-template-columns: 110px 1fr 58px; align-items: center; gap: 10px; margin: 7px 0; }
+  .row .lab { font-size: 13px; color: var(--ink-2); text-align: right; word-break: keep-all; }
+  .bar-track { height: 14px; position: relative; }
+  .bar {
+    height: 100%; background: var(--accent); border-radius: 0 4px 4px 0;
+    min-width: 2px; transition: width .3s ease;
+  }
+  .bar.zero { background: transparent; min-width: 0; }
+  .row .val { font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .row .val .pct { color: var(--muted); }
+
+  .flag {
+    font-size: 13.5px; color: var(--ink-2); background: var(--page);
+    border: 1px solid var(--line); border-left: 3px solid var(--warn);
+    border-radius: 8px; padding: 10px 12px; margin-top: 12px; word-break: keep-all;
+  }
+
+  .text-item {
+    background: var(--page); border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px; font-size: 14.5px; margin: 8px 0; white-space: pre-wrap; word-break: keep-all;
+  }
+  .none { color: var(--muted); font-size: 14px; }
+  .privacy { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>협력사 설문 결과</h1>
+  <div class="sub">개별 응답 열람은 대표이사 전용입니다. 사내 공유는 통계·유형화 자료만 사용하십시오.</div>
+  <div id="stage"></div>
+</div>
+
+<script>
+const stage = document.getElementById('stage');
+let KEY = sessionStorage.getItem('adminKey') || '';
+
+if (KEY) load(); else renderLogin();
+
+function renderLogin(msg) {
+  stage.innerHTML =
+    '<div class="card login">' +
+    '<input type="password" id="pw" placeholder="관리자 키 입력" autocomplete="off">' +
+    '<button class="btn" id="go">열람</button>' +
+    (msg ? '<div class="err">' + msg + '</div>' : '') +
+    '</div>';
+  const pw = document.getElementById('pw');
+  document.getElementById('go').onclick = tryLogin;
+  pw.onkeydown = e => { if (e.key === 'Enter') tryLogin(); };
+  pw.focus();
+  function tryLogin() { KEY = pw.value; load(); }
+}
+
+async function load() {
+  const res = await fetch('/api/admin/results', { headers: { 'x-admin-key': KEY } });
+  if (res.status === 401) { sessionStorage.removeItem('adminKey'); renderLogin('키가 올바르지 않습니다.'); return; }
+  if (!res.ok) { const d = await res.json().catch(() => ({})); renderLogin(d.error || '서버 오류'); return; }
+  sessionStorage.setItem('adminKey', KEY);
+  render(await res.json());
+}
+
+function render(data) {
+  let html = '<div class="toolbar">' +
+    '<div class="total">총 응답 <b>' + data.total + '</b>건</div>' +
+    '<button class="btn ghost" id="csv">CSV 내려받기</button></div>';
+
+  const partNames = { A: 'A. 최근 6개월간의 경험 (행동 빈도)', B: 'B. 소통 구조 (5점 척도)', C: 'C. 종합' };
+  let curPart = '';
+
+  for (const q of data.stats) {
+    if (q.part !== curPart) { curPart = q.part; html += '<div class="part-h">' + partNames[q.part] + '</div>'; }
+    html += '<div class="card">';
+    html += '<div class="q-title"><span class="q-id">' + q.id.toUpperCase() + '</span>' + esc(q.text) + '</div>';
+
+    if (q.type === 'text') {
+      if (q.texts.length === 0) html += '<div class="none">아직 서술 응답이 없습니다.</div>';
+      else q.texts.forEach(t => { html += '<div class="text-item">' + esc(t) + '</div>'; });
+      html += '<div class="privacy">서술 원문은 사내에 그대로 공유하지 말고 유형화해서 전달하십시오.</div>';
+    } else {
+      const max = Math.max(1, ...q.counts);
+      q.choices.forEach((c, i) => {
+        const n = q.counts[i];
+        const pct = data.total ? Math.round(n / data.total * 100) : 0;
+        const w = (n / max * 100);
+        html += '<div class="row">' +
+          '<div class="lab">' + esc(c) + '</div>' +
+          '<div class="bar-track"><div class="bar' + (n === 0 ? ' zero' : '') + '" style="width:' + w + '%"></div></div>' +
+          '<div class="val">' + n + ' <span class="pct">(' + pct + '%)</span></div>' +
+          '</div>';
+      });
+      if (q.id === 'a10') {
+        html += '<div class="flag">해석 기준: 다른 문항이 대부분 "없었다"인데 이 문항만 "있었다"가 나오면, 응답 전체의 솔직도가 낮다는 신호입니다. 결과 해석 시 이 문항부터 확인하십시오.</div>';
+      }
+    }
+    html += '</div>';
+  }
+  stage.innerHTML = html;
+  document.getElementById('csv').onclick = async () => {
+    const res = await fetch('/api/admin/csv', { headers: { 'x-admin-key': KEY } });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'responses.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+</script>
+</body>
+</html>

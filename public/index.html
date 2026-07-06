@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>협력사 거래·소통 실태 설문</title>
+<style>
+  :root {
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --line: #e1e0d9;
+    --accent: #2a78d6;
+    --accent-soft: #cde2fb;
+    --border: rgba(11,11,11,0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --line: #2c2c2a;
+      --accent: #3987e5;
+      --accent-soft: #10315c;
+      --border: rgba(255,255,255,0.10);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: var(--page); color: var(--ink);
+    min-height: 100dvh; display: flex; flex-direction: column; align-items: center;
+    line-height: 1.55;
+  }
+  .wrap { width: 100%; max-width: 560px; padding: 20px 18px 40px; flex: 1; display: flex; flex-direction: column; }
+
+  /* 진행 표시 */
+  .topbar { display: none; align-items: center; gap: 12px; margin-bottom: 22px; }
+  .topbar.show { display: flex; }
+  .back {
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink-2);
+    border-radius: 10px; padding: 8px 14px; font-size: 14px; cursor: pointer;
+  }
+  .back:disabled { opacity: 0.35; cursor: default; }
+  .track { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+  .fill { height: 100%; width: 0%; background: var(--accent); border-radius: 3px; transition: width .25s ease; }
+  .count { font-size: 13px; color: var(--muted); min-width: 48px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 26px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .part-tag {
+    display: inline-block; font-size: 12.5px; font-weight: 600; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px; padding: 3px 12px; margin-bottom: 12px;
+  }
+  .part-desc { font-size: 13.5px; color: var(--muted); margin-bottom: 6px; }
+  .q-text { font-size: 18.5px; font-weight: 650; margin: 4px 0 22px; word-break: keep-all; }
+
+  .choices { display: flex; flex-direction: column; gap: 10px; }
+  .choice {
+    width: 100%; text-align: left; font-size: 16.5px; color: var(--ink);
+    background: var(--page); border: 1.5px solid var(--line); border-radius: 12px;
+    padding: 15px 16px; cursor: pointer; transition: border-color .12s, background .12s;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .choice:active { background: var(--accent-soft); }
+  .choice.selected { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+  .dot {
+    width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--muted);
+    flex: none; display: grid; place-items: center;
+  }
+  .choice.selected .dot { border-color: var(--accent); }
+  .choice.selected .dot::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+
+  textarea {
+    width: 100%; min-height: 150px; resize: vertical;
+    font: inherit; font-size: 16px; color: var(--ink);
+    background: var(--page); border: 1.5px solid var(--line); border-radius: 12px; padding: 14px;
+  }
+  textarea:focus { outline: none; border-color: var(--accent); }
+  .optional { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+  .btn {
+    display: block; width: 100%; margin-top: 22px;
+    background: var(--accent); color: #fff; border: none; border-radius: 12px;
+    padding: 16px; font-size: 17px; font-weight: 650; cursor: pointer;
+  }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1.5px solid var(--accent); }
+
+  /* 안내 화면 */
+  .intro h1 { font-size: 22px; margin-bottom: 16px; word-break: keep-all; }
+  .notice {
+    background: var(--page); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px; font-size: 14.5px; color: var(--ink-2); margin-bottom: 8px;
+  }
+  .notice strong { color: var(--ink); }
+  .notice li { margin: 6px 0 6px 18px; word-break: keep-all; }
+  .meta { font-size: 13px; color: var(--muted); margin-top: 14px; }
+
+  .done { text-align: center; padding: 48px 12px; }
+  .done .mark { font-size: 44px; margin-bottom: 14px; }
+  .done h2 { font-size: 20px; margin-bottom: 10px; }
+  .done p { color: var(--ink-2); font-size: 15px; word-break: keep-all; }
+
+  .err { color: #d03b3b; font-size: 14px; margin-top: 12px; display: none; }
+  .err.show { display: block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar" id="topbar">
+    <button class="back" id="backBtn">이전</button>
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <div class="count" id="count"></div>
+  </div>
+  <div id="stage"></div>
+</div>
+
+<script>
+let DATA = null;
+let idx = -1;             // -1: 안내 화면
+const answers = {};
+const stage = document.getElementById('stage');
+const topbar = document.getElementById('topbar');
+const fill = document.getElementById('fill');
+const count = document.getElementById('count');
+const backBtn = document.getElementById('backBtn');
+
+fetch('/api/questions').then(r => r.json()).then(d => { DATA = d; render(); });
+
+backBtn.onclick = () => { if (idx > 0) { idx--; render(); } else if (idx === 0) { idx = -1; render(); } };
+
+function render() {
+  if (!DATA) return;
+  const qs = DATA.questions;
+
+  if (idx === -1) { topbar.classList.remove('show'); renderIntro(); return; }
+  if (idx >= qs.length) { topbar.classList.remove('show'); renderDone(); return; }
+
+  topbar.classList.add('show');
+  backBtn.disabled = false;
+  fill.style.width = (idx / qs.length * 100) + '%';
+  count.textContent = (idx + 1) + ' / ' + qs.length;
+
+  const q = qs[idx];
+  const part = DATA.partInfo[q.part];
+  const partLabel = q.part === 'A' ? 'A. ' + part.title : q.part === 'B' ? 'B. ' + part.title : 'C. ' + part.title;
+
+  let html = '<div class="card">';
+  html += '<span class="part-tag">' + partLabel + '</span>';
+  if (part.desc && q.part !== 'C') html += '<div class="part-desc">' + part.desc + '</div>';
+  html += '<div class="q-text">' + esc(q.text) + '</div>';
+
+  if (q.type === 'text') {
+    html += '<textarea id="ta" placeholder="자유롭게 적어주십시오. 특정인이 드러나지 않는 선에서 구체적일수록 도움이 됩니다.">'
+      + esc(answers[q.id] || '') + '</textarea>';
+    html += '<div class="optional">이 문항은 건너뛰어도 됩니다.</div>';
+    const last = idx === qs.length - 1;
+    html += '<button class="btn" id="nextBtn">' + (last ? '제출하기' : '다음') + '</button>';
+    html += '<div class="err" id="err"></div>';
+    html += '</div>';
+    stage.innerHTML = html;
+    document.getElementById('nextBtn').onclick = () => {
+      answers[q.id] = document.getElementById('ta').value;
+      if (idx === qs.length - 1) submit(); else { idx++; render(); }
+    };
+  } else {
+    html += '<div class="choices">';
+    q && DATA.choices[q.type].forEach((c, i) => {
+      const sel = answers[q.id] === i ? ' selected' : '';
+      html += '<button class="choice' + sel + '" data-i="' + i + '"><span class="dot"></span>' + esc(c) + '</button>';
+    });
+    html += '</div></div>';
+    stage.innerHTML = html;
+    stage.querySelectorAll('.choice').forEach(btn => {
+      btn.onclick = () => {
+        answers[q.id] = Number(btn.dataset.i);
+        btn.classList.add('selected');
+        // 선택 표시가 잠깐 보인 뒤 자동으로 다음 문항으로 넘어간다.
+        setTimeout(() => { idx++; render(); window.scrollTo(0, 0); }, 180);
+      };
+    });
+  }
+}
+
+function renderIntro() {
+  stage.innerHTML =
+    '<div class="card intro">' +
+    '<h1>협력사 거래·소통 실태 설문</h1>' +
+    '<div class="notice"><strong>본 설문은 무기명입니다.</strong>' +
+    '<ul>' +
+    '<li>응답자나 회사를 특정할 수 있는 정보를 수집하지 않습니다. (이름·회사명·연락처·접속 기록 없음)</li>' +
+    '<li>개별 응답은 ' + esc(DATA.company) + ' 대표이사만 열람하며, 결과는 통계로만 활용됩니다.</li>' +
+    '<li>응답 내용은 거래 관계에 어떤 영향도 주지 않습니다. 솔직한 답변이 개선의 근거가 됩니다.</li>' +
+    '</ul></div>' +
+    '<div class="meta">문항 ' + DATA.questions.length + '개 · 약 5분 소요 · 선택 문항은 탭 한 번으로 넘어갑니다.</div>' +
+    '<button class="btn" id="startBtn">설문 시작</button>' +
+    '</div>';
+  document.getElementById('startBtn').onclick = () => { idx = 0; render(); };
+}
+
+function renderDone() {
+  stage.innerHTML =
+    '<div class="card done">' +
+    '<div class="mark">✓</div>' +
+    '<h2>제출이 완료되었습니다</h2>' +
+    '<p>소중한 의견 감사합니다.<br>결과는 통계로 정리해 개선 조치와 함께 공유하겠습니다.</p>' +
+    '</div>';
+}
+
+async function submit() {
+  const btn = document.getElementById('nextBtn');
+  const err = document.getElementById('err');
+  btn.disabled = true; btn.textContent = '제출 중…';
+  try {
+    const res = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answers }),
+    });
+    if (!res.ok) throw new Error();
+    idx = DATA.questions.length; render();
+  } catch {
+    btn.disabled = false; btn.textContent = '제출하기';
+    err.textContent = '제출에 실패했습니다. 네트워크 확인 후 다시 시도해 주세요.';
+    err.classList.add('show');
+  }
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+</script>
+</body>
+</html>
